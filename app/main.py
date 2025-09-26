@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware # <-- 1. Import middleware
 from starlette.responses import FileResponse
 from celery.result import AsyncResult
 from .schemas import DownloadRequest, DownloadResponse, TaskStatusResponse
@@ -6,6 +7,27 @@ from worker.tasks import download_video_task
 import os
 
 app = FastAPI(title="SaveClips API v2", version="2.0.0")
+
+# --------------------------------------------------------------------------
+# 2. ADD THIS ENTIRE CORS CONFIGURATION BLOCK
+# --------------------------------------------------------------------------
+origins = [
+    "https://saveclips.download",
+    "https://www.saveclips.download",
+    # You might want to add localhost for local development & testing
+    "http://127.0.0.1",
+    "http://localhost",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"], # Allows all methods (GET, POST, etc.)
+    allow_headers=["*"], # Allows all headers
+)
+# --------------------------------------------------------------------------
+
 
 @app.post("/download", response_model=DownloadResponse, status_code=202)
 def submit_download(request: DownloadRequest):
